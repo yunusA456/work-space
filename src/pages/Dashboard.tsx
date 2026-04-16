@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Clock, CheckCircle2, CalendarDays, TrendingUp, LogIn, LogOut, ListTodo, AlertCircle } from 'lucide-react';
+import { Clock, CheckCircle2, CalendarDays, TrendingUp, LogIn, LogOut, ListTodo, AlertCircle, Coffee, UtensilsCrossed } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { Task, Attendance, Leave } from '../types';
+import { Task, Attendance, Leave, Break } from '../types';
 
 interface DashboardStats {
   todayHours: number | null;
@@ -13,6 +13,7 @@ interface DashboardStats {
   todayCompleted: number;
   todayTasks: Task[];
   todayAttendance: Attendance | null;
+  todayBreaks: Break[];
   checkedIn: boolean;
   checkedOut: boolean;
 }
@@ -40,6 +41,7 @@ export default function Dashboard() {
     todayCompleted: 0,
     todayTasks: [],
     todayAttendance: null,
+    todayBreaks: [],
     checkedIn: false,
     checkedOut: false,
   });
@@ -54,17 +56,19 @@ export default function Dashboard() {
   const fetchData = async () => {
     if (!user) return;
 
-    const [attendanceRes, tasksRes, leavesRes, avgRes] = await Promise.all([
+    const [attendanceRes, tasksRes, leavesRes, avgRes, breaksRes] = await Promise.all([
       supabase.from('attendance').select('*').eq('user_id', user.id).eq('date', today).maybeSingle(),
       supabase.from('tasks').select('*').eq('user_id', user.id).or(`task_date.eq.${today},is_recurring.eq.true`),
       supabase.from('leaves').select('*').eq('user_id', user.id).gte('leave_date', monthStart).lte('leave_date', monthEnd),
       supabase.from('attendance').select('total_hours').eq('user_id', user.id).gte('date', monthStart).lte('date', monthEnd).not('total_hours', 'is', null),
+      supabase.from('breaks').select('*').eq('user_id', user.id).eq('date', today),
     ]);
 
     const attendance = attendanceRes.data as Attendance | null;
     const tasks = (tasksRes.data || []) as Task[];
     const leaves = (leavesRes.data || []) as Leave[];
     const avgData = avgRes.data || [];
+    const breaks_data = (breaksRes.data || []) as Break[];
 
     const todayTasks = tasks.filter(t => t.is_recurring || t.task_date === today);
     const pending = todayTasks.filter(t => t.status === 'pending').length;
@@ -78,7 +82,13 @@ export default function Dashboard() {
     if (attendance?.check_in && attendance?.check_out) {
       todayHours = Number(attendance.total_hours) || null;
     } else if (attendance?.check_in && !attendance?.check_out) {
-      const diff = (Date.now() - new Date(attendance.check_in).getTime()) / 3600000;
+      let totalBreakMs = 0;
+      breaks_data.forEach(b => {
+        if (b.start_time && b.end_time) {
+          totalBreakMs += new Date(b.end_time).getTime() - new Date(b.start_time).getTime();
+        }
+      });
+      const diff = (Date.now() - new Date(attendance.check_in).getTime() - totalBreakMs) / 3600000;
       todayHours = Math.round(diff * 100) / 100;
     }
 
@@ -91,6 +101,7 @@ export default function Dashboard() {
       todayCompleted: completed,
       todayTasks: todayTasks.slice(0, 5),
       todayAttendance: attendance,
+      todayBreaks: breaks_data,
       checkedIn: !!attendance?.check_in,
       checkedOut: !!attendance?.check_out,
     });
@@ -300,6 +311,29 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
+
+          {stats.todayBreaks.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-slate-500">Today's Breaks</span>
+              </div>
+              <div className="space-y-2">
+                {stats.todayBreaks.map(brk => (
+                  <div key={brk.id} className="flex items-center justify-between px-2.5 py-1.5 bg-slate-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      {brk.break_type === 'lunch' ? (
+                        <UtensilsCrossed className="w-4 h-4 text-blue-600" />
+                      ) : (
+                        <Coffee className="w-4 h-4 text-orange-600" />
+                      )}
+                      <span className="text-xs font-medium text-slate-700 capitalize">{brk.break_type}</span>
+                    </div>
+                    <span className="text-xs text-slate-600">{brk.duration_minutes ? `${brk.duration_minutes}m` : '—'}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

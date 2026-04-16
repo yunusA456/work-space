@@ -43,4 +43,15 @@ export interface Leave {
   created_at: string;
 }
 
+export interface Break {
+  id: string;
+  user_id: string;
+  date: string;
+  break_type: 'lunch' | 'coffee';
+  start_time?: string;
+  end_time?: string;
+  duration_minutes?: number;
+  created_at: string;
+}
+
 export type Page = 'dashboard' | 'tasks' | 'attendance' | 'leaves';
