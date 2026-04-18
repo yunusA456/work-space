@@ -3,8 +3,10 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
+import CheckInOut from './pages/CheckInOut';
 import Attendance from './pages/Attendance';
 import Leaves from './pages/Leaves';
+import Reports from './pages/Reports';
 import Layout from './components/Layout';
 import { Page } from './types';
 
@@ -28,8 +30,10 @@ function AppContent() {
   const pages: Record<Page, JSX.Element> = {
     dashboard: <Dashboard />,
     tasks: <Tasks />,
+    checkinout: <CheckInOut />,
     attendance: <Attendance />,
     leaves: <Leaves />,
+    reports: <Reports />,
   };
 
   return (

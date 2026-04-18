@@ -54,4 +54,4 @@ export interface Break {
   created_at: string;
 }
 
-export type Page = 'dashboard' | 'tasks' | 'attendance' | 'leaves';
+export type Page = 'dashboard' | 'tasks' | 'checkinout' | 'attendance' | 'leaves' | 'reports';

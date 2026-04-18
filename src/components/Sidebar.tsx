@@ -1,4 +1,4 @@
-import { Building2, LayoutDashboard, CheckSquare, Clock, CalendarOff, LogOut, Menu, X } from 'lucide-react';
+import { Building2, LayoutDashboard, CheckSquare, Clock, CalendarOff, LogOut, Menu, X, LogIn, BarChart3 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Page } from '../types';
@@ -10,9 +10,11 @@ interface SidebarProps {
 
 const navItems: { id: Page; label: string; icon: React.ReactNode }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
+  { id: 'checkinout', label: 'Check In/Out', icon: <LogIn className="w-5 h-5" /> },
   { id: 'tasks', label: 'Tasks', icon: <CheckSquare className="w-5 h-5" /> },
   { id: 'attendance', label: 'Attendance', icon: <Clock className="w-5 h-5" /> },
   { id: 'leaves', label: 'Leave', icon: <CalendarOff className="w-5 h-5" /> },
+  { id: 'reports', label: 'Reports', icon: <BarChart3 className="w-5 h-5" /> },
 ];
 
 export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
